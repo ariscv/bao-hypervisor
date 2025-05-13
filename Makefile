@@ -5,6 +5,8 @@ SHELL:=bash
 
 PROJECT_NAME:=bao
 
+Q = @
+
 # Helper functions
 
 define current_directory
@@ -179,23 +181,25 @@ override LDFLAGS+=-build-id=none -nostdlib --fatal-warnings \
 	-z common-page-size=$(PAGE_SIZE) -z max-page-size=$(PAGE_SIZE) \
 	$(arch-ldflags) $(plattform-ldflags)
 
+# override CFLAGS    += -fdata-sections -ffunction-sections
+# override LDFLAGS   += --gc-sections 
 .PHONY: all
 all: $(targets-y)
 	
 $(bin_dir)/$(PROJECT_NAME).elf: $(gens) $(objs-y) $(ld_script_temp)
-	@echo "Linking			$(patsubst $(cur_dir)/%, %, $@)"
-	@$(ld) $(LDFLAGS) -T$(ld_script_temp) $(objs-y) -o $@
-	@$(objdump) -S --wide $@ > $(basename $@).asm
-	@$(readelf) -a --wide $@ > $@.txt
+	$(Q) echo "Linking			$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(ld) $(LDFLAGS) -T$(ld_script_temp) $(objs-y) -o $@
+	$(Q) $(objdump) -S --wide $@ > $(basename $@).asm
+	$(Q) $(readelf) -a --wide $@ > $@.txt
 
 ifneq ($(DEBUG), y)
-	@echo "Striping	$@"
-	@$(sstrip) -s $@
+	$(Q) echo "Striping	$@"
+	$(Q) $(sstrip) -s $@
 endif
 
 $(ld_script_temp):
-	@echo "Pre-processing		$(patsubst $(cur_dir)/%, %, $(ld_script))"
-	@$(cc) -E $(addprefix -I, $(inc_dirs)) -x assembler-with-cpp  $(CPPFLAGS) \
+	$(Q) echo "Pre-processing		$(patsubst $(cur_dir)/%, %, $(ld_script))"
+	$(Q) $(cc) -E $(addprefix -I, $(inc_dirs)) -x assembler-with-cpp  $(CPPFLAGS) \
 		$(ld_script) | grep -v '^\#' > $(ld_script_temp)
 
 ifeq (, $(findstring $(MAKECMDGOALS), clean $(submakes)))
@@ -203,21 +207,21 @@ ifeq (, $(findstring $(MAKECMDGOALS), clean $(submakes)))
 endif
 
 $(ld_script_temp).d: $(ld_script) 
-	@echo "Creating dependency	$(patsubst $(cur_dir)/%, %, $<)"
-	@$(cc) -x assembler-with-cpp  -MM -MT "$(ld_script_temp) $@" \
+	$(Q) echo "Creating dependency	$(patsubst $(cur_dir)/%, %, $<)"
+	$(Q) $(cc) -x assembler-with-cpp  -MM -MT "$(ld_script_temp) $@" \
 		$(addprefix -I, $(inc_dirs))  $< > $@
 
 $(build_dir)/%.d : $(src_dir)/%.[c,S]
-	@echo "Creating dependency	$(patsubst $(cur_dir)/%, %, $<)"
-	@$(cc) -MM -MG -MT "$(patsubst %.d, %.o, $@) $@"  $(CPPFLAGS) $< > $@	
+	$(Q) echo "Creating dependency	$(patsubst $(cur_dir)/%, %, $<)"
+	$(Q) $(cc) -MM -MG -MT "$(patsubst %.d, %.o, $@) $@"  $(CPPFLAGS) $< > $@	
 
 $(objs-y):
-	@echo "Compiling source	$(patsubst $(cur_dir)/%, %, $<)"
-	@$(cc) $(CFLAGS) -c $< -o $@
+	$(Q) echo "Compiling source	$(patsubst $(cur_dir)/%, %, $<)"
+	$(Q) $(cc) $(CFLAGS) -c $< -o $@
 
 %.bin: %.elf
-	@echo "Generating binary	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(objcopy) -S -O binary $< $@
+	$(Q) echo "Generating binary	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(objcopy) -S -O binary $< $@
 
 $(deps): | $(gens)
 
@@ -226,41 +230,41 @@ $(deps): | $(gens)
 
 ifneq ($(wildcard $(asm_defs_src)),)
 $(asm_defs_hdr): $(asm_defs_src)
-	@echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(cc) -S $(CFLAGS) -DGENERATING_DEFS $< -o - \
+	$(Q) echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(cc) -S $(CFLAGS) -DGENERATING_DEFS $< -o - \
 		| awk '($$1 == "->") \
 			{ gsub("#", "", $$3); print "#define " $$2 " " $$3 }' > $@
 
 $(asm_defs_hdr).d: $(asm_defs_src)
-	@echo "Creating dependency	$(patsubst $(cur_dir)/%, %,\
+	$(Q) echo "Creating dependency	$(patsubst $(cur_dir)/%, %,\
 		 $(patsubst %.d,%, $@))"
-	@$(cc) -MM -MT "$(patsubst %.d,%, $@)" $(addprefix -I, $(inc_dirs)) $< > $@	
+	$(Q) $(cc) -MM -MT "$(patsubst %.d,%, $@)" $(addprefix -I, $(inc_dirs)) $< > $@	
 endif
 
 $(config_dep): $(config_src)
-	@echo "Creating dependency	$(patsubst $(cur_dir)/%, %,\
+	$(Q) echo "Creating dependency	$(patsubst $(cur_dir)/%, %,\
 		 $(patsubst %.d,%, $@))"
-	@$(cc) -MM -MG -MT "$(config_obj) $@" $(CPPFLAGS) $(filter %.c, $^) > $@
-	@$(cc) $(CPPFLAGS) -S $(config_src) -o - | grep ".incbin" | \
+	$(Q) $(cc) -MM -MG -MT "$(config_obj) $@" $(CPPFLAGS) $(filter %.c, $^) > $@
+	$(Q) $(cc) $(CPPFLAGS) -S $(config_src) -o - | grep ".incbin" | \
 		awk '{ gsub("\"", "", $$2); print "$(config_obj): " $$2 }' >> $@
 
 $(config_def_generator): $(config_def_generator_src) $(config_src)
-	@echo "Compiling generator	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(HOST_CC) $^ $(build_macros) $(CPPFLAGS) -DGENERATING_DEFS \
+	$(Q) echo "Compiling generator	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(HOST_CC) $^ $(build_macros) $(CPPFLAGS) -DGENERATING_DEFS \
 		$(addprefix -I, $(inc_dirs)) -o $@
 
 $(config_defs): $(config_def_generator)
-	@echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(config_def_generator) > $(config_defs)
+	$(Q) echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(config_def_generator) > $(config_defs)
 
 $(platform_def_generator): $(platform_def_generator_src) $(platform_description)
-	@echo "Compiling generator	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(HOST_CC) $^ $(build_macros) $(CPPFLAGS) -DGENERATING_DEFS -D$(ARCH) \
+	$(Q) echo "Compiling generator	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(HOST_CC) $^ $(build_macros) $(CPPFLAGS) -DGENERATING_DEFS -D$(ARCH) \
 		$(addprefix -I, $(inc_dirs)) -o $@
 
 $(platform_defs): $(platform_def_generator)
-	@echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
-	@$(platform_def_generator) > $(platform_defs)
+	$(Q) echo "Generating header	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) $(platform_def_generator) > $(platform_defs)
 
 
 #Generate directories for object, dependency and generated files
@@ -270,13 +274,13 @@ $(platform_defs): $(platform_def_generator)
 $(objs-y) $(deps) $(targets-y) $(gens): | $$(@D)
 
 $(directories):
-	@echo "Creating directory	$(patsubst $(cur_dir)/%, %, $@)"
-	@mkdir -p $@
+	$(Q) echo "Creating directory	$(patsubst $(cur_dir)/%, %, $@)"
+	$(Q) mkdir -p $@
 
 #Clean all object, dependency and generated files
 
 .PHONY: clean
 clean:
-	@echo "Erasing directories..."
+	$(Q) echo "Erasing directories..."
 	-rm -rf $(build_dir)
 	-rm -rf $(bin_dir)
