@@ -161,24 +161,8 @@
     csrw	\_csr_name, t0
 .endm
 
-//.macro GET_SP
-//    csrr sp,sscratch  // Read HTPIDR (CPU base address)
-//    LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
-//    addi sp, sp, VCPU_REGS_OFF
-//.endm
-
 .macro GET_SP
-    /* CPU physical based address */
-    la t0, _dmem_phys_beg 
-    
-    /* CPU_X physical base address */
-    li t1, CPU_SIZE
-    csrr a0,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
-    mul t2, a0, t1
-    add t0, t0, t2
-
-    csrw  sscratch,t0
-    mv sp,t0 //csrr sp,sscratch  // Read HTPIDR (CPU base address)
+    csrr sp,sscratch  // Read HTPIDR (CPU base address)
     LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
     addi sp, sp, VCPU_REGS_OFF
 .endm
@@ -240,7 +224,7 @@
 .balign 0x4
 .global _hyp_trap_vector	
 _hyp_trap_vector:
-    //j _hyp_trap_before_boot
+    j _hyp_trap_before_boot
     VM_EXIT
     csrr    t0, scause
     bltz    t0, 1f

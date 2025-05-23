@@ -9,6 +9,7 @@
 #include <objpool.h>
 #include <vm.h>
 #include <fences.h>
+#include <console.h>
 
 struct cpu_msg_node {
     node_t node;
@@ -30,6 +31,75 @@ extern size_t _ipi_cpumsg_handlers_id_start[];
 size_t ipi_cpumsg_handler_num;
 
 struct cpuif cpu_interfaces[PLAT_CPU_NUM];
+
+/* void cpu_print(struct cpu* s){
+    char buf[256]={0};
+    char *p=buf;
+    const char *str=NULL;
+    
+    str="cpuid_t id[0x%08x]";
+    p+=printk( "%s[0x%08x]\n", str, s->id);
+
+    str="bool handling_msgs";
+    p+=printk( "%s[0x%x]\n", str, s->handling_msgs);
+    
+    str="struct addr_space as";
+    p+=printk( "%s[0x%x]\n", str, s->as);
+
+    str="struct vcpu* vcpu";
+    p+=printk( "%s[0x%x]\n", str, s->vcpu);
+
+    str="struct cpu_arch arch";
+    p+=printk( "%s[0x%x]\n", str, s->arch);
+
+    str="struct cpuif* interface";
+    p+=printk( "%s[0x%x]\n", str, s->interface);
+
+    str="uint8_t stack[STACK_SIZE]"; 
+    p+=printk( "%s[0x%x]\n", str, s->stack);
+    
+    // console_write(buf);
+} */
+static spinlock_t cpu_print_lock = SPINLOCK_INITVAL;
+void cpu_print(struct cpu* s){
+    char buf[256]={0};
+    char *p=buf;
+    const char *str=NULL;
+    
+    spin_lock(&cpu_print_lock);
+   
+    p+=sprintk(p, "=CPU %d[0x%x]:\n", s->id,s);
+
+    str="==" "cpuid_t id";
+    p+=sprintk(p, "%s=0x%x\n", str, s->id);
+
+    str="==" "bool handling_msgs";
+    p+=sprintk(p, "%s=%d\n", str, s->handling_msgs);
+    
+    str="==" "struct addr_space as";
+    p+=sprintk(p, "%s[0x%x]=0x%x,0x%x\n", str, &s->as,s->as,s->as.id);
+
+    p+=print_cpu_addr_space(p,&s->as);
+
+    str="==" "struct vcpu* vcpu";
+    p+=sprintk(p, "%s[0x%x]\n", str, s->vcpu);
+
+    p+=print_cpu_vcpu(p,"---",s->vcpu);
+
+    str="==" "struct cpu_arch arch";
+    p+=sprintk(p, "%s[0x%x]=0x%x,%d\n", str, &s->arch,s->arch,s->arch.hart_id);
+
+    str="==" "struct cpuif* interface";
+    p+=sprintk(p, "%s[0x%x]\n", str, s->interface);
+
+    str="==" "uint8_t stack[STACK_SIZE]"; 
+    p+=sprintk(p, "%s[0x%x]\n", str, s->stack);
+    
+    console_write(buf);
+
+    spin_unlock(&cpu_print_lock);
+    return ;
+}
 
 void cpu_init(cpuid_t cpu_id, paddr_t load_addr)
 {

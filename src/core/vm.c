@@ -9,6 +9,41 @@
 #include <cache.h>
 #include <config.h>
 
+
+int print_cpu_vcpu(char* buf,char* prefix,struct vcpu *vcpu)
+{
+    char* p = buf;
+    if(vcpu==NULL){
+        return sprintk(buf,"%svcpu: NULL\n",prefix);
+    }
+    char* str;
+
+    str="node_t node";
+    p+=sprintk(p, "%s%s=0x%x\n", prefix ,str, vcpu->node);
+
+    str="struct arch_regs regs";
+    p+=sprintk(p, "%s%s=0x%x\n", prefix ,str, vcpu->regs);
+
+    p+=print_cpu_vcpu_arch_regs(p,"----",&vcpu->regs);
+
+    str="struct vcpu_arch arch";
+    p+=sprintk(p, "%s%s=0x%x\n", prefix ,str, vcpu->arch);
+
+    str="vcpuid_t id";
+    p+=sprintk(p, "%s%s=%d\n", prefix ,str, vcpu->id);
+
+    str="cpuid_t phys_id";
+    p+=sprintk(p, "%s%s=%d\n", prefix ,str, vcpu->phys_id);
+
+    str="bool active";
+    p+=sprintk(p, "%s%s=%d\n", prefix ,str, vcpu->active);
+
+    str="struct vm* vm";
+    p+=sprintk(p, "%s%s=0x%x\n", prefix ,str, vcpu->vm);
+
+    return p-buf;
+};
+
 static void vm_master_init(struct vm* vm, const struct vm_config* config, vmid_t vm_id)
 {
     vm->master = cpu()->id;

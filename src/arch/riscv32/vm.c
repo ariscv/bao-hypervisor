@@ -11,17 +11,51 @@
 #include <string.h>
 #include <config.h>
 
+#define pse_printf(format, ...) p+=sprintk(p,format, ## __VA_ARGS__)
+#define SBI_TRAP_LOG(format, ...)\
+  pse_printf("\33[1;35m[%s,%d,%s] " format "\33[0m\n", \
+      __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+const char *regs_names[] = {
+    "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+    "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+    "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+    "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
+	"epc","mstatus","mstatusH"
+};
+
+int print_cpu_vcpu_arch_regs(char* buf,char* prefix,struct arch_regs *arch_regs){
+    char*  p=buf;
+
+	// SBI_TRAP_LOG("trap stack info:");
+	for(int i=0;i<35;i++){
+		
+        switch(i%4){
+            case 0:
+                pse_printf("%s%s=0x%08x ",prefix,regs_names[i],((uint32_t*)(&arch_regs->x[0]))[i]);
+                break;
+            case 3:
+                pse_printf("%s=0x%08x \n",regs_names[i],((uint32_t*)(&arch_regs->x[0]))[i]);
+                break;
+            default:
+                pse_printf("%s=0x%08x ",regs_names[i],((uint32_t*)(&arch_regs->x[0]))[i]);
+                break;
+        }
+	}
+    pse_printf("\n");
+    return p-buf;
+}
+
 void vm_arch_init(struct vm *vm, const struct vm_config *config)
 {
-    paddr_t root_pt_pa;
-    mem_translate(&cpu()->as, (vaddr_t)vm->as.pt.root, &root_pt_pa);
+    // paddr_t root_pt_pa;
+    // mem_translate(&cpu()->as, (vaddr_t)vm->as.pt.root, &root_pt_pa);
 
-    unsigned long hgatp = (root_pt_pa >> PAGE_SHIFT) | (HGATP_MODE_DFLT) |
-                          ((vm->id << HGATP_VMID_OFF) & HGATP_VMID_MSK);
+    // unsigned long hgatp = (root_pt_pa >> PAGE_SHIFT) | (HGATP_MODE_DFLT) |
+    //                       ((vm->id << HGATP_VMID_OFF) & HGATP_VMID_MSK);
 
-    CSRW(CSR_HGATP, hgatp);
+    // CSRW(CSR_HGATP, hgatp);
 
-    vplic_init(vm, platform.arch.plic_base);
+    // vplic_init(vm, platform.arch.plic_base);
 }
 
 void vcpu_arch_init(struct vcpu *vcpu, struct vm *vm) {
@@ -33,7 +67,7 @@ void vcpu_arch_reset(struct vcpu *vcpu, vaddr_t entry)
 {
     memset(&vcpu->regs, 0, sizeof(struct arch_regs));
     
-    CSRW(sscratch, &vcpu->regs);
+    // CSRW(sscratch, &vcpu->regs);
 
     vcpu->regs.hstatus = HSTATUS_SPV /* | HSTATUS_VSXL_64 */;
     vcpu->regs.sstatus = SSTATUS_SPP_BIT | SSTATUS_FS_DIRTY | SSTATUS_XS_DIRTY;

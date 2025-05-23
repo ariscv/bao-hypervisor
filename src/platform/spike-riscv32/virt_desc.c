@@ -7,7 +7,9 @@
 
 struct platform platform = {
 
-    .cpu_num = 4,
+    .cpu_num = 2,
+    .cpu_master_fixed = true,
+    .cpu_master = 0,
 
     .region_num = 1,
     .regions =  (struct mem_region[]) {

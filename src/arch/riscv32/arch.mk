@@ -15,5 +15,5 @@ arch-cflags = -fno-pic \
 arch-asflags =
 arch-ldflags = -melf32lriscv
 
-arch_mem_prot:=mmu
+arch_mem_prot:=mpu
 PAGE_SIZE:=0x1000

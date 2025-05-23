@@ -9,6 +9,10 @@
 #include <string.h>
 #include <config.h>
 
+int print_cpu_vcpu_arch_regs(char* buf,char* prefix,struct arch_regs *arch_regs)
+{
+}
+
 void vm_arch_init(struct vm* vm, const struct vm_config* config)
 {
     if (vm->master == cpu()->id) {

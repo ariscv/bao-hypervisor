@@ -7,6 +7,7 @@
 #define __ARCH_CPU_H__
 
 #include <bao.h>
+#include <arch/csrs.h>
 
 extern cpuid_t CPU_MASTER;
 
@@ -15,8 +16,12 @@ struct cpu_arch {
     unsigned plic_cntxt;
 };
 
-static inline struct cpu* cpu() {
-    return (struct cpu*)BAO_CPU_BASE;
-}
+// static inline struct cpu* cpu() {
+//     return (struct cpu*)csrs_sscratch_read();
+// }
+
+
+struct cpu* cpu() ;
+
 
 #endif /* __ARCH_CPU_H__ */

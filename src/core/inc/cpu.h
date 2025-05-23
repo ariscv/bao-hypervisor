@@ -70,6 +70,7 @@ void cpu_msg_handler();
 void cpu_msg_set_handler(cpuid_t id, cpu_msg_handler_t handler);
 void cpu_idle();
 void cpu_idle_wakeup();
+void cpu_print(struct cpu* s);
 
 void cpu_arch_init(cpuid_t cpu_id, paddr_t load_addr);
 void cpu_arch_idle();

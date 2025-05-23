@@ -28,7 +28,7 @@ HOST_CC:=gcc
 
 #Makefile arguments and default values
 DEBUG:=y
-OPTIMIZATIONS:=2
+OPTIMIZATIONS:=0#2
 CONFIG=
 PLATFORM=
 

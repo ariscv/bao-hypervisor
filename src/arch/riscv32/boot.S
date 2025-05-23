@@ -122,7 +122,7 @@ _reset_handler:
  */
     la      t0, CPU_MASTER
     li      t1, CPU_MASTER_FIXED
-    sd      t1, 0(t0)
+    STORE      t1, 0(t0)
 #else
 /**
  * The first hart to grab the lock is CPU_MASTER.
@@ -194,6 +194,7 @@ _boot_lock:
     la      t0, _barrier
     li      t1, 1
     STORE   t1, 0(t0)
+     j _enter_vas
     j       map_cpu
 
 wait_for_bsp:
@@ -203,7 +204,7 @@ wait_for_bsp:
     LOAD      t2, 0(t0)
     blt     t2, t1, 1b
 
- j _enter_vas
+j _enter_vas
 
 map_cpu:
     /* Calculate base phys address of CPU struct -> t0 */
@@ -292,9 +293,12 @@ _enter_vas:
     or      t0, t0, STVEC_MODE_DIRECT
     csrw   stvec, t0
 
+    call boot_arch_profile_init
+
     /* Init stack pointer and global pointer */
     /* TODO: what about tp? */
-    li      t0, BAO_CPU_BASE
+    csrr    t0, sscratch
+    //li      t0, BAO_CPU_BASE
     li      sp, CPU_STACK_OFF + CPU_STACK_SIZE
     add     sp, t0, sp
 
@@ -334,4 +338,50 @@ clear:
     sb  zero, 0(a3)
     add a3, a3, 1
     blt a3, a4, clear
+    ret
+
+
+/*  ==================================== */
+
+
+.section ".boot", "ax"
+.global boot_arch_profile_init
+boot_arch_profile_init:
+    /* CPU physical based address */
+    la t0, _dmem_phys_beg 
+    
+    /* CPU_X physical base address */
+    li t1, CPU_SIZE
+    mul t2, a0, t1
+    add t0, t0, t2
+
+    /* Clear the CPU struct */
+    mv a3, t0
+    add a4, t0, t1
+    mv s2, ra
+    call clear
+    mv ra, s2
+
+    /* Save CPU_X phys base address on sscratch */
+    csrw sscratch, t0 // write sscratch
+
+    /* Disable MPU and Caches */
+//    mrc p15, 4, r3, c1, c0, 0 // HSCTLR
+//    mov r4, #(SCTLR_I | SCTLR_C | SCTLR_M)
+//    bic r3, r3, r4
+//    dsb
+//    mcr p15, 4, r3, c1, c0, 0 // HSCTLR
+//    isb
+//
+//    /* Reset Hyp Architectural Feature Trap */
+//    mov r4, #0
+//    mcr p15, 4, r4, c1, c1, 2 // HCPTR
+//
+//    ldr r4, =MAIR_EL2_DFLT
+//    mcr p15, 4, r4, c10, c2, 0 // HMAIR
+//
+//    /* r4 contains the id of the MPU entry being used */
+//    mov r4, #(-1)
+
+
     ret

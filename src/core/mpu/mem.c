@@ -39,6 +39,50 @@ static inline struct mpe* mem_vmpu_get_entry(struct addr_space* as, mpid_t mpid)
     return NULL;
 }
 
+int print_cpu_mem_prot_addr_space(char* buf,struct addr_space* as){
+    char* p = buf;
+    char* str=NULL;
+
+
+    str="---" "asid_t id";
+    p+=sprintk(p, "%s=0x%x\n", str, as->id);
+
+    str="---" "enum AS_TYPE type";
+    p+=sprintk(p, "%s=%d\n", str, as->type);
+
+    str="---" "colormap_t(aka. ulong) colors";
+    p+=sprintk(p, "%s=0x%x\n", str, as->colors);
+
+    // for(int i=0;i<VMPU_NUM_ENTRIES;i++){
+    for(int i=0;i<1;i++){
+        struct mpe* mpe = &as->vmpu[i];
+    p+=sprintk(p, 
+            "---" "struct mpe(at 0x%x) vmpu[%d] {"                                "\n"
+            "---" "    enum { MPE_S_FREE, MPE_S_INVALID, MPE_S_VALID } state=%d;" "\n"
+            "---" "    struct mp_region region = {"                                 "\n"
+            "---" "                     vaddr_t base=0x%x;"                          "\n"
+            "---" "                     size_t size=0x%x;"                          "\n"
+            "---" "                     mem_flags_t mem_flags=%d;"                  "\n"
+            "---" "                     as_sec_t as_sec=%d;"                  "\n"
+            "---" "                 }"                                              "\n"
+            "---" "};"                                                              "\n"
+        
+        ,  as->vmpu[i],i,
+            mpe->state,
+            mpe->region.base,
+            mpe->region.size,
+            mpe->region.mem_flags,
+            mpe->region.as_sec
+            
+        );
+    }
+
+    str="---" "spinlock_t(uint32_t) lock";
+    p+=sprintk(p, "%s=0x%x\n", str, as->lock);
+
+    return p-buf;
+}
+
 void mem_vmpu_set_entry(struct addr_space *as, mpid_t mpid, struct mp_region *mpr)
 {
     struct mpe *mpe = mem_vmpu_get_entry(as, mpid);

@@ -98,6 +98,9 @@ struct vcpu {
 
     struct vm* vm;
 };
+extern const char *regs_names[] ;
+int print_cpu_vcpu(char* buf,char* prefix,struct vcpu *vcpu);
+int print_cpu_vcpu_arch_regs(char* buf,char* prefix,struct arch_regs *arch_regs);
 
 struct vm_allocation {
     vaddr_t base;

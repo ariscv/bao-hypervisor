@@ -32,6 +32,7 @@ struct addr_space {
     spinlock_t lock;
 };
 
+int print_cpu_mem_prot_addr_space(char* buf,struct addr_space* as);
 void as_init(struct addr_space *as, enum AS_TYPE type, asid_t id, colormap_t colors);
 
 static inline bool mem_regions_overlap(struct mp_region *reg1, 

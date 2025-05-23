@@ -161,3 +161,15 @@ void sync_exception_handler()
 
     cpu()->vcpu->regs.sepc += pc_step;
 }
+uint32_t* _hyp_trap_before_boot_handler(uint32_t gprs[]){
+    for(int i = 0; i < 32; i++) {
+        printk("%s:\t\t0x%0lx\n", regs_names[i], gprs[i]);
+    }
+    printk("scause:\t\t0x%0lx\n", CSRR(scause));
+    printk("sstatus:\t0x%0lx\n", CSRR(sstatus));
+    printk("stval:\t\t0x%0lx\n", CSRR(stval));
+    printk("sepc:\t\t0x%0lx\n", CSRR(sepc));
+    asm volatile("wfi");
+    ERROR("cpu%d internal hypervisor abort - PANIC\n", cpu()->id);
+    return gprs;
+}

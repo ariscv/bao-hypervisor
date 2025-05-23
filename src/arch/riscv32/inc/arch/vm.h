@@ -7,8 +7,6 @@
 #define __ARCH_VM_H__
 
 #include <bao.h>
-#include <arch/vplic.h>
-#include <arch/sbi.h>
 
 #define REG_RA (1)
 #define REG_SP (2)
@@ -42,6 +40,91 @@
 #define REG_T5 (30)
 #define REG_T6 (31)
 
+/* below is learning from opensbi */
+/* clang-format off */
+
+/** Index of zero member in sbi_trap_regs */
+#define HYP_TRAP_REGS_zero			0
+/** Index of ra member in sbi_trap_regs */
+#define HYP_TRAP_REGS_ra			1
+/** Index of sp member in sbi_trap_regs */
+#define HYP_TRAP_REGS_sp			2
+/** Index of gp member in sbi_trap_regs */
+#define HYP_TRAP_REGS_gp			3
+/** Index of tp member in sbi_trap_regs */
+#define HYP_TRAP_REGS_tp			4
+/** Index of t0 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t0			5
+/** Index of t1 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t1			6
+/** Index of t2 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t2			7
+/** Index of s0 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s0			8
+/** Index of s1 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s1			9
+/** Index of a0 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a0			10
+/** Index of a1 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a1			11
+/** Index of a2 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a2			12
+/** Index of a3 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a3			13
+/** Index of a4 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a4			14
+/** Index of a5 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a5			15
+/** Index of a6 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a6			16
+/** Index of a7 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_a7			17
+/** Index of s2 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s2			18
+/** Index of s3 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s3			19
+/** Index of s4 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s4			20
+/** Index of s5 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s5			21
+/** Index of s6 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s6			22
+/** Index of s7 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s7			23
+/** Index of s8 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s8			24
+/** Index of s9 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s9			25
+/** Index of s10 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s10			26
+/** Index of s11 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_s11			27
+/** Index of t3 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t3			28
+/** Index of t4 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t4			29
+/** Index of t5 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t5			30
+/** Index of t6 member in sbi_trap_regs */
+#define HYP_TRAP_REGS_t6			31
+#define HYP_TRAP_REGS_hstatus		32
+#define HYP_TRAP_REGS_sstatus		33
+#define HYP_TRAP_REGS_sepc			34
+/** Last member index in sbi_trap_regs */
+#define HYP_TRAP_REGS_last			35
+
+/* clang-format on */
+
+/** Get offset of member with name 'x' in sbi_trap_regs */
+#define HYP_TRAP_REGS_OFFSET(x) ( REGLEN * (HYP_TRAP_REGS_##x) )
+/** Size (in bytes) of sbi_trap_regs */
+#define HYP_TRAP_REGS_SIZE HYP_TRAP_REGS_OFFSET(last)
+
+#ifndef __ASSEMBLER__
+
+#include <arch/vplic.h>
+#include <arch/sbi.h>
+
 struct arch_vm_platform {
     paddr_t plic_base;
 };
@@ -57,8 +140,9 @@ struct vcpu_arch {
 
 struct arch_regs {
     union {
-        unsigned long x[31];
+        unsigned long x[32];
         struct {
+            unsigned long zero;
             unsigned long ra;
             unsigned long sp;
             unsigned long gp;
@@ -120,5 +204,7 @@ static inline void vcpu_arch_inject_irq(struct vcpu *vcpu, uint64_t id)
 {
     vplic_inject(vcpu, id);
 }
+
+#endif /* __ASSEMBLER__ */
 
 #endif /* __ARCH_VM_H__ */

@@ -23,6 +23,7 @@ enum AS_SEC;
 
 typedef pte_t mem_flags_t;
 
+static int print_cpu_mem_prot_addr_space(char* buf,struct addr_space* as){}
 void as_init(struct addr_space* as, enum AS_TYPE type, asid_t id, 
             pte_t* root_pt, colormap_t colors);
 vaddr_t mem_alloc_vpage(struct addr_space* as, enum AS_SEC section,

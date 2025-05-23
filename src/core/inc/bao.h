@@ -14,6 +14,9 @@
 #include <printk.h>
 #include <util.h>
 
+#define DEBUG(args, ...) \
+    printk("BAO DEBUG[%d]: " args "\n", cpu()->id __VA_OPT__(, ) __VA_ARGS__);
+
 #define INFO(args, ...) \
     printk("BAO INFO: " args "\n" __VA_OPT__(, ) __VA_ARGS__);
 

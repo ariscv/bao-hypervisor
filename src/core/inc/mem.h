@@ -49,6 +49,10 @@ struct shmem {
     spinlock_t lock;
 };
 
+static inline int print_cpu_addr_space(char* buf,struct addr_space* as){
+    return print_cpu_mem_prot_addr_space(buf,as);
+}
+
 static inline struct ppages mem_ppages_get(paddr_t base, size_t num_pages)
 {
     return (struct ppages){.colors = 0, .base = base, .num_pages = num_pages};
