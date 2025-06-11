@@ -91,13 +91,13 @@ void vcpu_arch_reset(struct vcpu *vcpu, vaddr_t entry)
 unsigned long vcpu_readreg(struct vcpu *vcpu, unsigned long reg)
 {
     if ((reg <= 0) || (reg > 31)) return 0;
-    return vcpu->regs.x[reg - 1];
+    return vcpu->regs.x[reg];
 }
 
 void vcpu_writereg(struct vcpu *vcpu, unsigned long reg, unsigned long val)
 {
     if ((reg <= 0) || (reg > 31)) return;
-    vcpu->regs.x[reg - 1] = val;
+    vcpu->regs.x[reg] = val;
 }
 
 unsigned long vcpu_readpc(struct vcpu *vcpu)
@@ -113,6 +113,7 @@ void vcpu_writepc(struct vcpu *vcpu, unsigned long pc)
 void vcpu_arch_run(struct vcpu *vcpu){
 
     if(vcpu->arch.sbi_ctx.state == STARTED){
+        printk("cpu %d: vm cpu started\n",cpu()->id);
         vcpu_arch_entry();
     } else {
         cpu_idle();

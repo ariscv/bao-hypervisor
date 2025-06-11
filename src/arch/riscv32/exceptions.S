@@ -11,6 +11,16 @@
 .text 
 #define __DEBUG_EXP
 
+.macro GET_CPU _ret_reg, _t1, _t2, _t3
+    /* CPU physical based address */
+    la \_ret_reg, _dmem_phys_beg 
+    
+    /* CPU_X physical base address */
+    li \_t1, CPU_SIZE
+    csrr \_t3,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
+    mul \_t2, \_t3, \_t1
+    add \_ret_reg, \_ret_reg, \_t2
+.endm
 .macro PUSH _reg_name
     STORE \_reg_name, -4(sp)
     addi sp, sp, -4
@@ -62,7 +72,7 @@
     
     mv      sp, x31
     csrrw   x31, sscratch, x31
-    STORE   x31, 30*REGLEN(sp)
+    STORE   x31, 31*REGLEN(sp)
 .endm
 
 .macro __NOT_USE_OTHER_WAY_SAVE_REGS
@@ -143,9 +153,12 @@
     SAVE_CSRS_SP
 
 
-    csrr    sp, sscratch
-    li      t0, (CPU_STACK_OFF + CPU_STACK_SIZE)
-    add     sp, sp, t0
+    # csrr    sp, sscratch
+    # li      t0, (CPU_STACK_OFF + CPU_STACK_SIZE)
+    # add     sp, sp, t0
+    GET_CPU t0, t1, t2, t3
+    li      t1, (CPU_STACK_OFF + CPU_STACK_SIZE)
+    add     sp, t1, t0
 
     .option push
     .option norelax
@@ -168,19 +181,20 @@
 //.endm
 
 .macro GET_SP
-    /* CPU physical based address */
-    la t0, _dmem_phys_beg 
+    # /* CPU physical based address */
+    # la t0, _dmem_phys_beg 
     
-    /* CPU_X physical base address */
-    li t1, CPU_SIZE
-    csrr a0,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
-    mul t2, a0, t1
-    add t0, t0, t2
+    # /* CPU_X physical base address */
+    # li t1, CPU_SIZE
+    # csrr a0,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
+    # mul t2, a0, t1
+    # add t0, t0, t2
+    GET_CPU t0, t1, t2, t3
 
-    csrw  sscratch,t0
     mv sp,t0 //csrr sp,sscratch  // Read HTPIDR (CPU base address)
     LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
     addi sp, sp, VCPU_REGS_OFF
+    csrw  sscratch,sp
 .endm
 
 .macro VM_ENTRY

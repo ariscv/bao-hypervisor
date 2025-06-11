@@ -5,6 +5,7 @@
 
 #include <bao.h>
 #include <cpu.h>
+#include <stdint.h>
 #include <vm.h>
 #include <arch/encoding.h>
 #include <arch/csrs.h>

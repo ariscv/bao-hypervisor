@@ -11,6 +11,7 @@
 #include <fences.h>
 #include <string.h>
 #include <ipc.h>
+#include "printk.h"
 
 static struct vm_assignment {
     spinlock_t lock;
@@ -140,6 +141,7 @@ void vmm_init()
         struct vm_config *vm_config = &config.vmlist[vm_id];
         struct vm *vm = vm_init(vm_alloc, vm_config, master, vm_id);
         cpu_sync_barrier(&vm->sync);
+        printk("cpu %d: vm %d initialized\n",cpu()->id, vm_id);
         vcpu_run(cpu()->vcpu);
     } else {
         cpu_idle();
