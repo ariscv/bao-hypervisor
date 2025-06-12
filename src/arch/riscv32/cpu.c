@@ -23,7 +23,8 @@ inline struct cpu* cpu() {
                 所以要么opensbi支持，要么处理器实现的时候不要trap，
                 不然就不要这个方法了
     */
-    return (struct cpu*)&_dmem_phys_beg + CSRR(mhartid);
+    // return (struct cpu*)&_dmem_phys_beg + CSRR(mhartid);
+    return (struct cpu*)csrs_sscratch_read();
 }
 
 /* Perform architecture dependent cpu cores initializations */

@@ -29,6 +29,9 @@
 #define REGLEN (4)
 #endif
 
+#define REG_S STORE
+#define REG_L LOAD
+
 #if (RV64)
 #define BAO_VAS_BASE (0xffffffc000000000)
 #define BAO_CPU_BASE (0xffffffc040000000)

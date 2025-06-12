@@ -120,6 +120,7 @@
 /** Size (in bytes) of sbi_trap_regs */
 #define HYP_TRAP_REGS_SIZE HYP_TRAP_REGS_OFFSET(last)
 
+#define HYP_SCRATCH_CPU_ARCH_TMPT0_OFFSET ( CPU_ARCH_OFF + CPU_ARCH_TMPT0_OFF )
 #ifndef __ASSEMBLER__
 
 #include <arch/vplic.h>

@@ -14,6 +14,7 @@ extern cpuid_t CPU_MASTER;
 struct cpu_arch {
     unsigned hart_id;
     unsigned plic_cntxt;
+    uint32_t tmpt0;
 };
 
 // static inline struct cpu* cpu() {

@@ -21,6 +21,33 @@
     mul \_t2, \_t3, \_t1
     add \_ret_reg, \_ret_reg, \_t2
 .endm
+
+.macro	TRAP_SAVE_AND_SETUP_SP_T0
+	/* Swap TP and MSCRATCH */
+	csrrw	tp, sscratch, tp
+
+	/* Save t0,t1,t2,t3 in scratch space */
+	REG_S	t0, HYP_SCRATCH_CPU_ARCH_TMPT0_OFFSET(tp)
+
+    LOAD    t0, CPU_VCPU_OFF(tp) // t0 = (cpu()->vcpu)
+    addi    t0, t0, VCPU_REGS_OFF
+
+	/* Save original SP on exception stack */
+	REG_S	sp, HYP_TRAP_REGS_OFFSET(sp)(t0)
+
+	/* Set SP */
+	mv	sp, t0
+
+	/* Restore T0 from scratch space */
+	REG_L	t0, HYP_SCRATCH_CPU_ARCH_TMPT0_OFFSET(tp)
+
+	/* Save T0 on stack */
+	REG_S	t0, HYP_TRAP_REGS_OFFSET(t0)(sp)
+
+	/* Swap TP and MSCRATCH */
+	csrrw	tp, sscratch, tp
+.endm
+
 .macro PUSH _reg_name
     STORE \_reg_name, -4(sp)
     addi sp, sp, -4
@@ -36,43 +63,40 @@
 .endm
 
 .macro SAVE_REGS_SET_SP
-    csrrw   x31, sscratch, x31
+    TRAP_SAVE_AND_SETUP_SP_T0
     
-    STORE   x0, 0*REGLEN(x31)
-    STORE   x1, 1*REGLEN(x31)
-    STORE   x2, 2*REGLEN(x31)
-    STORE   x3, 3*REGLEN(x31)
-    STORE   x4, 4*REGLEN(x31)
-    STORE   x5, 5*REGLEN(x31)
-    STORE   x6, 6*REGLEN(x31)
-    STORE   x7, 7*REGLEN(x31)
-    STORE   x8, 8*REGLEN(x31)
-    STORE   x9, 9*REGLEN(x31)
-    STORE   x10, 10*REGLEN(x31)
-    STORE   x11, 11*REGLEN(x31)
-    STORE   x12, 12*REGLEN(x31)
-    STORE   x13, 13*REGLEN(x31)
-    STORE   x14, 14*REGLEN(x31)
-    STORE   x15, 15*REGLEN(x31)
-    STORE   x16, 16*REGLEN(x31)
-    STORE   x17, 17*REGLEN(x31)
-    STORE   x18, 18*REGLEN(x31)
-    STORE   x19, 19*REGLEN(x31)
-    STORE   x20, 20*REGLEN(x31)
-    STORE   x21, 21*REGLEN(x31)
-    STORE   x22, 22*REGLEN(x31)
-    STORE   x23, 23*REGLEN(x31)
-    STORE   x24, 24*REGLEN(x31)
-    STORE   x25, 25*REGLEN(x31)
-    STORE   x26, 26*REGLEN(x31)
-    STORE   x27, 27*REGLEN(x31)
-    STORE   x28, 28*REGLEN(x31)
-    STORE   x29, 29*REGLEN(x31)
-    STORE   x30, 30*REGLEN(x31)
-    
-    mv      sp, x31
-    csrrw   x31, sscratch, x31
-    STORE   x31, 31*REGLEN(sp)
+    /* Save all general regisers except SP and T0 */
+	REG_S	zero, HYP_TRAP_REGS_OFFSET(zero)(sp)
+	REG_S	ra, HYP_TRAP_REGS_OFFSET(ra)(sp)
+	REG_S	gp, HYP_TRAP_REGS_OFFSET(gp)(sp)
+	REG_S	tp, HYP_TRAP_REGS_OFFSET(tp)(sp)
+	REG_S	t1, HYP_TRAP_REGS_OFFSET(t1)(sp)
+	REG_S	t2, HYP_TRAP_REGS_OFFSET(t2)(sp)
+	REG_S	s0, HYP_TRAP_REGS_OFFSET(s0)(sp)
+	REG_S	s1, HYP_TRAP_REGS_OFFSET(s1)(sp)
+	REG_S	a0, HYP_TRAP_REGS_OFFSET(a0)(sp)
+	REG_S	a1, HYP_TRAP_REGS_OFFSET(a1)(sp)
+	REG_S	a2, HYP_TRAP_REGS_OFFSET(a2)(sp)
+	REG_S	a3, HYP_TRAP_REGS_OFFSET(a3)(sp)
+	REG_S	a4, HYP_TRAP_REGS_OFFSET(a4)(sp)
+	REG_S	a5, HYP_TRAP_REGS_OFFSET(a5)(sp)
+	REG_S	a6, HYP_TRAP_REGS_OFFSET(a6)(sp)
+	REG_S	a7, HYP_TRAP_REGS_OFFSET(a7)(sp)
+	REG_S	s2, HYP_TRAP_REGS_OFFSET(s2)(sp)
+	REG_S	s3, HYP_TRAP_REGS_OFFSET(s3)(sp)
+	REG_S	s4, HYP_TRAP_REGS_OFFSET(s4)(sp)
+	REG_S	s5, HYP_TRAP_REGS_OFFSET(s5)(sp)
+	REG_S	s6, HYP_TRAP_REGS_OFFSET(s6)(sp)
+	REG_S	s7, HYP_TRAP_REGS_OFFSET(s7)(sp)
+	REG_S	s8, HYP_TRAP_REGS_OFFSET(s8)(sp)
+	REG_S	s9, HYP_TRAP_REGS_OFFSET(s9)(sp)
+	REG_S	s10, HYP_TRAP_REGS_OFFSET(s10)(sp)
+	REG_S	s11, HYP_TRAP_REGS_OFFSET(s11)(sp)
+	REG_S	t3, HYP_TRAP_REGS_OFFSET(t3)(sp)
+	REG_S	t4, HYP_TRAP_REGS_OFFSET(t4)(sp)
+	REG_S	t5, HYP_TRAP_REGS_OFFSET(t5)(sp)
+	REG_S	t6, HYP_TRAP_REGS_OFFSET(t6)(sp)
+
 .endm
 
 .macro __NOT_USE_OTHER_WAY_SAVE_REGS
@@ -153,12 +177,12 @@
     SAVE_CSRS_SP
 
 
-    # csrr    sp, sscratch
-    # li      t0, (CPU_STACK_OFF + CPU_STACK_SIZE)
-    # add     sp, sp, t0
-    GET_CPU t0, t1, t2, t3
-    li      t1, (CPU_STACK_OFF + CPU_STACK_SIZE)
-    add     sp, t1, t0
+    csrr    sp, sscratch
+    li      t0, (CPU_STACK_OFF + CPU_STACK_SIZE)
+    add     sp, sp, t0
+    # GET_CPU t0, t1, t2, t3
+    # li      t1, (CPU_STACK_OFF + CPU_STACK_SIZE)
+    # add     sp, t1, t0
 
     .option push
     .option norelax
@@ -174,28 +198,28 @@
     csrw	\_csr_name, t0
 .endm
 
-//.macro GET_SP
-//    csrr sp,sscratch  // Read HTPIDR (CPU base address)
-//    LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
-//    addi sp, sp, VCPU_REGS_OFF
-//.endm
-
 .macro GET_SP
-    # /* CPU physical based address */
-    # la t0, _dmem_phys_beg 
-    
-    # /* CPU_X physical base address */
-    # li t1, CPU_SIZE
-    # csrr a0,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
-    # mul t2, a0, t1
-    # add t0, t0, t2
-    GET_CPU t0, t1, t2, t3
-
-    mv sp,t0 //csrr sp,sscratch  // Read HTPIDR (CPU base address)
+    csrr sp,sscratch  // Read HTPIDR (CPU base address)
     LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
     addi sp, sp, VCPU_REGS_OFF
-    csrw  sscratch,sp
 .endm
+
+//.macro GET_SP
+//    # /* CPU physical based address */
+//    # la t0, _dmem_phys_beg 
+//    
+//    # /* CPU_X physical base address */
+//    # li t1, CPU_SIZE
+//    # csrr a0,mhartid //这里会trap到M-mode就是屎....要么处理器实现不trap，要么多加点寄存器给hypervisor放管理用的寄存器
+//    # mul t2, a0, t1
+//    # add t0, t0, t2
+//    GET_CPU t0, t1, t2, t3
+//
+//    mv sp,t0 //csrr sp,sscratch  // Read HTPIDR (CPU base address)
+//    LOAD   sp, CPU_VCPU_OFF(sp) // t0 = (cpu()->vcpu)
+//    addi sp, sp, VCPU_REGS_OFF
+//    csrw  sscratch,sp
+//.endm
 
 .macro VM_ENTRY
     GET_SP
