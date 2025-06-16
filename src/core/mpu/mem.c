@@ -575,7 +575,7 @@ vaddr_t mem_alloc_map(struct addr_space* as, as_sec_t section,
     } 
     
     if (at != INVALID_VA && ppages != NULL && at != ppages->base) {
-        ERROR ("Trying to map non identity");
+        ERROR ("Trying to map non identity, maybe your config.dev_num!=dev.size()");
     }
     
     if (at == INVALID_VA) {

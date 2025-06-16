@@ -30,5 +30,10 @@ struct vcpu;
 void vplic_init(struct vm *vm, vaddr_t vplic_base);
 void vplic_inject(struct vcpu *vcpu, irqid_t id);
 void vplic_set_hw(struct vm *vm, irqid_t id);
+bool vplic_global_emul_handler(struct emul_access *acc);
+bool vplic_hart_emul_handler(struct emul_access *acc);
+bool vplic_is_valid(uint32_t va);
+bool vplic_is_valid_global_emul(uint32_t va);
+bool vplic_is_valid_claimcomplte_emul(uint32_t va);
 
 #endif /* __VPLIC_H__ */

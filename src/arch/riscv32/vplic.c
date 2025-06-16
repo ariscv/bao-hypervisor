@@ -292,7 +292,7 @@ static void vplic_emul_enbl_access(struct emul_access *acc)
     }
 }
 
-static bool vplic_global_emul_handler(struct emul_access *acc)
+bool vplic_global_emul_handler(struct emul_access *acc)
 {
     // only allow aligned word accesses
     if (acc->width != 4 || acc->addr & 0x3) return false;
@@ -312,7 +312,7 @@ static bool vplic_global_emul_handler(struct emul_access *acc)
     return true;
 }
 
-static bool vplic_hart_emul_handler(struct emul_access *acc)
+bool vplic_hart_emul_handler(struct emul_access *acc)
 {
     // only allow aligned word accesses
     if (acc->width > 4 || acc->addr & 0x3) return false;
@@ -345,6 +345,42 @@ static bool vplic_hart_emul_handler(struct emul_access *acc)
     return true;
 }
 
+inline bool vplic_is_valid_global_emul(uint32_t va)
+{
+    struct vcpu *vcpu = cpu()->vcpu;
+    struct emul_mem *plic_global_emul = &vcpu->vm->arch.vplic.plic_global_emul;
+    return (
+            va >= plic_global_emul->va_base 
+            && va < plic_global_emul->va_base + plic_global_emul->size
+           )
+            ;
+}
+inline bool vplic_is_valid_claimcomplte_emul(uint32_t va)
+{
+    struct vcpu *vcpu = cpu()->vcpu;
+    struct emul_mem *plic_claimcomplte_emul = &vcpu->vm->arch.vplic.plic_claimcomplte_emul;
+    return (
+            va >= plic_claimcomplte_emul->va_base 
+            && va < plic_claimcomplte_emul->va_base + plic_claimcomplte_emul->size
+           )
+            ;
+}
+inline bool vplic_is_valid(uint32_t va)
+{
+    /* struct vcpu *vcpu = cpu()->vcpu;
+    struct emul_mem *plic_global_emul = &vcpu->vm->arch.vplic.plic_global_emul;
+    struct emul_mem *plic_claimcomplte_emul = &vcpu->vm->arch.vplic.plic_claimcomplte_emul;
+    return (
+            va >= plic_global_emul->va_base 
+            && va < plic_global_emul->va_base + plic_global_emul->size
+           )
+           || (
+            va >= plic_claimcomplte_emul->va_base 
+            && va < plic_claimcomplte_emul->va_base + plic_claimcomplte_emul->size
+           )
+            ; */
+    return vplic_is_valid_global_emul(va) || vplic_is_valid_claimcomplte_emul(va);
+}
 void vplic_init(struct vm *vm, vaddr_t vplic_base)
 {
     if (cpu()->id == vm->master) {

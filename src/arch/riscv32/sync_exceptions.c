@@ -133,7 +133,59 @@ size_t guest_page_fault_handler()
     }
 }
 
+
+/* msuad: 添加vplic模拟单一入口，合并plic_global_emul和plic_claimcomplte_emul */
+size_t vplic_emul_handler(){
+    uint32_t ins=*(volatile uint32_t*)CSRR(sepc);
+    size_t ins_size = TINST_INS_SIZE(ins);
+
+    uint32_t addr = CSRR(stval);
+
+    // cpu()->vcpu->regs
+    struct emul_access emul={0};
+    if (!ins_ldst_decode(ins, &emul)) {
+            ERROR("cant decode ld/st instruction");
+        }
+    emul.addr = addr;
+
+    // print_emul(&emul);
+
+    emul_handler_t handler = NULL;
+
+    if(vplic_is_valid_global_emul(addr))
+    {
+        handler=vplic_global_emul_handler;
+    }else if(vplic_is_valid_claimcomplte_emul(addr)){
+        handler=vplic_hart_emul_handler;
+    }
+    
+    if (handler(&emul)) {
+        return ins_size;
+    } else {
+        ERROR("emulation handler failed (0x%x at 0x%x)", addr, CSRR(sepc));
+    }
+
+    return ins_size;
+}
+size_t load_access_fault_handler(){
+    uint32_t va=CSRR(stval);
+    if(vplic_is_valid(va)){
+        return vplic_emul_handler();
+    }else {
+        ERROR("unkown load access fault at 0x%x",va);
+    }
+}
+size_t store_access_fault_handler(){
+    uint32_t va=CSRR(stval);
+    if(vplic_is_valid(va)){
+        return vplic_emul_handler();
+    }else {
+        ERROR("unkown store access fault at 0x%x",va);
+    }
+}
 sync_handler_t sync_handler_table[] = {
+    [SCAUSE_CODE_LAF] = load_access_fault_handler,
+    [SCAUSE_CODE_SAF] = store_access_fault_handler,
     [SCAUSE_CODE_ECV] = sbi_vs_handler,
     [SCAUSE_CODE_LGPF] = guest_page_fault_handler,
     [SCAUSE_CODE_SGPF] = guest_page_fault_handler,
@@ -146,6 +198,12 @@ void sync_exception_handler()
 {
     size_t pc_step = 0;
     unsigned long _scause = CSRR(scause);
+
+    // uint32_t  hstatus = CSRR(CSR_HSTATUS),sstatus = CSRR(CSR_SSTATUS);
+    // INFO("hstatus.SPV=%d, sstatus.SPP=%d, hstatus.SPVP=%d",!!(hstatus&HSTATUS_SPV),!!(sstatus&SSTATUS_SPP),!!(hstatus&HSTATUS_SPVP));
+    // uint32_t sie = CSRR(sie),hie=CSRR(hie);
+    // INFO("sie=0x%x,SEIE=%d",sie,!!(sie&SIE_SEIE));
+    // INFO("hie=0x%x,VSEIE=%d,SGEIE=%d",hie,!!(hie&HIE_VSEIE),!!(hie&HIE_SGEIE));
 
     if(!(CSRR(CSR_HSTATUS) & HSTATUS_SPV)) {
         internal_exception_handler(&cpu()->vcpu->regs.x[0]);

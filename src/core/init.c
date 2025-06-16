@@ -49,7 +49,7 @@ void init(cpuid_t cpu_id, paddr_t load_addr)
     // BAO_LOG("WFI");
     //     asm volatile("wfi");
 
-    // interrupts_init();
+    interrupts_init();
 // BAO_LOG("id=%d\n\r",CSRR(mhartid));
 // asm volatile("wfi");
     vmm_init();

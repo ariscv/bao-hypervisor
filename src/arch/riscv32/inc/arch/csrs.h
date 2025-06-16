@@ -88,6 +88,7 @@
 #define SSTATUS_UPIE_BIT            (1UL << 4)
 #define SSTATUS_SPIE_BIT            (1UL << 5)
 #define SSTATUS_SPP_BIT             (1UL << 8)
+#define SSTATUS_SPP                 SSTATUS_SPP_BIT
 #define SSTATUS_FS_OFF              (13)
 #define SSTATUS_FS_LEN              (2)
 #define SSTATUS_FS_MSK              BIT_MASK(SSTATUS_FS_OFF, SSTATUS_FS_LEN)

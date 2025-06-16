@@ -54,11 +54,13 @@ static inline bool interrupt_is_reserved(irqid_t int_id)
 enum irq_res interrupts_handle(irqid_t int_id)
 {
     if (vm_has_interrupt(cpu()->vcpu->vm, int_id)) {
+        // printk("injecting interrupt cpu%d:%d to VM\n",cpu()->id,int_id);
         vcpu_inject_hw_irq(cpu()->vcpu, int_id);
 
         return FORWARD_TO_VM;
 
     } else if (interrupt_is_reserved(int_id)) {
+        // printk("handled by hypervisor cpu%d:%d\n",cpu()->id,int_id);
         interrupt_handlers[int_id](int_id);
 
         return HANDLED_BY_HYP;

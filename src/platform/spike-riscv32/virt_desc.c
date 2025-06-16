@@ -19,6 +19,10 @@ struct platform platform = {
         }
     },
 
+    .console = {
+        .base = 0x10000000
+    },
+
     .arch = {
         .plic_base = 0xc000000,
     }

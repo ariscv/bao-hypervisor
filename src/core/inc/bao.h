@@ -27,7 +27,7 @@
     {                                                               \
         printk("BAO ERROR: " args "\n" __VA_OPT__(, ) __VA_ARGS__); \
         while (1)                                                   \
-            ;                                                       \
+            asm volatile("wfi\n\t" ::: "memory");                                                  \
     }
 
 #endif /* __ASSEMBLER__ */
